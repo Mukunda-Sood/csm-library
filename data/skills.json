@@ -8,7 +8,12 @@
     "tool": "EKX",
     "customerGroup": "CSM",
     "task": "QBR Generation",
-    "tags": ["SPARQL", "knowledge-graph", "queries", "optimisation"],
+    "tags": [
+      "SPARQL",
+      "knowledge-graph",
+      "queries",
+      "optimisation"
+    ],
     "version": "1.0.0",
     "filename": "ekx-sparql-query-builder.md",
     "onePagerUrl": "",
@@ -16,6 +21,27 @@
     "ratingCount": 0,
     "dateAdded": "2026-06-17",
     "featured": true,
+    "status": "approved"
+  },
+  {
+    "id": "cse-example",
+    "title": "example",
+    "description": "Assess the ACV risk percentage, risk classification, and recommended mitigation lever for Gainsight ACV@Risk process. Guides EAs a",
+    "author": "Mukunda Sood",
+    "authorRole": "CSM",
+    "tool": "CSE",
+    "customerGroup": "CSM",
+    "task": "ask risk",
+    "tags": [
+      "queries"
+    ],
+    "version": "1.0.0",
+    "filename": "cse-example.md",
+    "onePagerUrl": "",
+    "communityRating": 0,
+    "ratingCount": 0,
+    "dateAdded": "2026-06-22",
+    "featured": false,
     "status": "approved"
   }
 ]

@@ -110,31 +110,8 @@ body:
     id: skill-file-content
     attributes:
       label: Skill File Content
-      description: |
-        Paste the **raw markdown content** of your skill file here.
-        Do NOT wrap it in a code fence — paste the markdown directly.
-        The file should start with a YAML frontmatter block (---) followed by the skill content.
-      placeholder: |
-        ---
-        name: your-skill-name
-        description: "One sentence describing the skill."
-        version: 1.0.0
-        author: Your Name
-        tool: EKX
-        tags:
-          - tag1
-          - tag2
-        ---
-
-        # Your Skill Title
-
-        ## When to Use This Skill
-
-        ...
-
-        ## Core Principles
-
-        ...
+      description: "Paste the raw markdown content of your skill file here. Do NOT wrap it in a code fence — paste the markdown directly."
+      placeholder: "# Your Skill Title\n\n## When to Use This Skill\n\n...\n\n## Core Principles\n\n..."
     validations:
       required: true
 
