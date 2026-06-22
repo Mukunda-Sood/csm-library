@@ -1,0 +1,145 @@
+name: Skill Submission
+description: Submit a new skill file for review and inclusion in the CSMS Skills Library.
+title: "[Skill Submission] "
+labels:
+  - skill-submission
+  - pending-review
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Submit a New Skill
+        Fill in all required fields below. A moderator will review your submission.
+        - If **approved**, a pull request will be opened automatically and your skill will appear on the site once merged.
+        - If **rejected**, the issue will be closed with feedback explaining why.
+
+  - type: input
+    id: title
+    attributes:
+      label: Title
+      description: A short, descriptive name for the skill (max 60 characters).
+      placeholder: "EKX SPARQL Query Builder"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: 1–2 sentences describing what this skill does and when to use it.
+      placeholder: "A skill file that guides EKX to construct and execute well-formed SPARQL queries..."
+    validations:
+      required: true
+
+  - type: input
+    id: tool
+    attributes:
+      label: Tool
+      description: The AI tool this skill targets (e.g. EKX, SAP Joule, Copilot, Gemini).
+      placeholder: "EKX"
+    validations:
+      required: true
+
+  - type: input
+    id: customer-group
+    attributes:
+      label: Customer Group
+      description: The customer group this skill is intended for (CSM or CRE).
+      placeholder: "CSM"
+    validations:
+      required: false
+
+  - type: input
+    id: task
+    attributes:
+      label: Task
+      description: The primary task or use case this skill supports (e.g. QBR Generation).
+      placeholder: "QBR Generation"
+    validations:
+      required: false
+
+  - type: input
+    id: tags
+    attributes:
+      label: Tags
+      description: Comma-separated list of lowercase tags (2–5 recommended).
+      placeholder: "sparql, knowledge-graph, queries"
+    validations:
+      required: true
+
+  - type: input
+    id: author
+    attributes:
+      label: Author
+      description: Your full name or team name.
+      placeholder: "Jane Smith"
+    validations:
+      required: true
+
+  - type: input
+    id: author-role
+    attributes:
+      label: Author Role
+      description: Your role or team (e.g. EKX Practice, Solution Architect).
+      placeholder: "EKX Practice"
+    validations:
+      required: false
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Semantic version string for this skill file.
+      placeholder: "1.0.0"
+      value: "1.0.0"
+    validations:
+      required: true
+
+  - type: textarea
+    id: skill-file-content
+    attributes:
+      label: Skill File Content
+      description: |
+        Paste the **raw markdown content** of your skill file here.
+        Do NOT wrap it in a code fence — paste the markdown directly.
+        The file should start with a YAML frontmatter block (---) followed by the skill content.
+      placeholder: |
+        ---
+        name: your-skill-name
+        description: "One sentence describing the skill."
+        version: 1.0.0
+        author: Your Name
+        tool: EKX
+        tags:
+          - tag1
+          - tag2
+        ---
+
+        # Your Skill Title
+
+        ## When to Use This Skill
+
+        ...
+
+        ## Core Principles
+
+        ...
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Submission Checklist
+      description: Please confirm the following before submitting.
+      options:
+        - label: I have tested this skill file and it produces useful results.
+          required: true
+        - label: The skill file includes a "When to Use This Skill" section.
+          required: true
+        - label: I have not included any customer names, confidential data, or internal-only system details.
+          required: true
+        - label: The skill content is relevant to the CSMS team's work.
+          required: true

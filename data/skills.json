@@ -1,0 +1,20 @@
+[
+  {
+    "id": "ekx-skill-001",
+    "title": "EKX SPARQL Query Builder",
+    "description": "A skill file that guides EKX to construct, optimise, and execute well-formed SPARQL queries against the SAP Knowledge Graph. Includes best practices for anchoring queries, using FILTER and VALUES clauses, avoiding expensive patterns, and interpreting results. Ideal for teams new to SPARQL or the EKX KG data model.",
+    "author": "CSMS Team",
+    "authorRole": "EKX Practice",
+    "tool": "EKX",
+    "customerGroup": "CSM",
+    "task": "QBR Generation",
+    "tags": ["SPARQL", "knowledge-graph", "queries", "optimisation"],
+    "version": "1.0.0",
+    "filename": "ekx-sparql-query-builder.md",
+    "communityRating": 4.5,
+    "ratingCount": 11,
+    "dateAdded": "2026-06-17",
+    "featured": true,
+    "status": "approved"
+  }
+]

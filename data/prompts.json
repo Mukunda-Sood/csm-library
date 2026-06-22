@@ -1,0 +1,16 @@
+[
+  {
+    "id": "ekx-prompt-001",
+    "title": "EKX Knowledge Graph Entity Explorer",
+    "description": "A structured prompt for deeply exploring SAP Knowledge Graph entities, their relationships, and properties using EKX. Designed to guide the agent through systematic KG traversal, SPARQL queries, and clear result presentation.",
+    "author": "CSMS Team",
+    "authorRole": "EKX Practice",
+    "tool": "EKX",
+    "tags": ["knowledge-graph", "exploration", "SPARQL", "entities"],
+    "prompt": "You are an EKX expert with deep knowledge of the SAP Knowledge Graph (KG). I want to explore the following topic in the KG:\n\n[TOPIC: Enter your topic or entity name here]\n\nPlease perform the following steps:\n\n1. SEARCH: Use search_kg() to find relevant entities matching my topic. Return the top results with their URIs and types.\n\n2. RELATIONSHIPS: For the most relevant entity found, use execute_sparql() to retrieve:\n   - All direct properties and their values\n   - Related entities (both incoming and outgoing relationships)\n   - The entity's type hierarchy (rdf:type and rdfs:subClassOf)\n\n3. DEEP DIVE: Pick the 2-3 most interesting relationships and follow them to reveal additional context about how this entity connects to the broader SAP landscape.\n\n4. VISUALISE: Summarise your findings in a structured format:\n   - Entity overview (name, type, description)\n   - Key relationships (as a bullet list)\n   - Interesting connections or patterns you discovered\n   - Any related domains or business processes\n\n5. NEXT STEPS: Suggest 3 follow-up questions or areas to explore further.\n\nAlways cite the specific URIs and query results you retrieved. If the KG does not contain certain information, say so clearly rather than guessing.",
+    "communityRating": 4.7,
+    "ratingCount": 23,
+    "dateAdded": "2026-06-17",
+    "featured": true
+  }
+]

@@ -1,0 +1,10 @@
+{
+  "repoUrl": "https://github.com/Mukunda-Sood/csm-library",
+  "customerGroups": [
+    "CSM",
+    "CRE"
+  ],
+  "tasks": [
+    "QBR Generation"
+  ]
+}

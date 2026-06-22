@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CSMS Skills Library</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════ HEADER -->
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="header-brand">
+        <img src="assets/sap-logo.svg" alt="SAP" class="sap-logo" />
+        <div class="header-divider"></div>
+        <div class="header-text">
+          <span class="header-name">CSMS Skills Library</span>
+          <span class="header-sub">AI Skills Marketplace</span>
+        </div>
+      </div>
+      <nav class="header-nav">
+        <button id="submit-skill-btn" class="btn-contribute" type="button">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          Submit a Skill
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════ HERO -->
+  <section class="hero">
+    <div class="hero-inner">
+      <h1 class="hero-title">CSMS Skills Marketplace</h1>
+      <p class="hero-sub">
+        Discover and share AI skill files for the CSMS team.<br />
+        Find what you need. Contribute what you know.
+      </p>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ CONTROLS -->
+  <div class="library-wrap">
+
+    <div class="controls-bar">
+      <!-- Count -->
+      <div class="skills-count-wrap">
+        <span id="skills-count">—</span>
+        <span class="skills-count-label">skills</span>
+      </div>
+
+      <!-- Filters -->
+      <div class="filters">
+        <div class="search-wrap">
+          <svg class="search-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="8.5" cy="8.5" r="5.5" stroke="#999" stroke-width="1.5"/>
+            <path d="M13 13l4 4" stroke="#999" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <input type="text" id="search-input" class="search-input" placeholder="Search skills…" autocomplete="off" />
+          <button class="search-clear hidden" id="search-clear" aria-label="Clear search">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="select-wrap">
+          <label class="select-label" for="tool-filter">Tool</label>
+          <select id="tool-filter" class="filter-select">
+            <option value="">All Tools</option>
+          </select>
+        </div>
+
+        <div class="select-wrap">
+          <label class="select-label" for="group-filter">Customer Group</label>
+          <select id="group-filter" class="filter-select">
+            <option value="">All Groups</option>
+          </select>
+        </div>
+
+        <div class="select-wrap">
+          <label class="select-label" for="task-filter">Task</label>
+          <select id="task-filter" class="filter-select">
+            <option value="">All Tasks</option>
+          </select>
+        </div>
+
+        <div class="select-wrap">
+          <label class="select-label" for="tag-filter">Tag</label>
+          <select id="tag-filter" class="filter-select">
+            <option value="">All Tags</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═════════════════════════════════════════ GRID -->
+    <div class="grid-area">
+      <div id="cards-grid" class="cards-grid"></div>
+      <div id="empty-state" class="empty-state hidden">
+        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="32" cy="32" r="28" stroke="#EAECEE" stroke-width="2"/>
+          <path d="M22 32h20M32 22v20" stroke="#EAECEE" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <p>No skills match your current filters.</p>
+        <button class="btn-reset" id="reset-filters">Clear filters</button>
+      </div>
+    </div>
+
+  </div><!-- /library-wrap -->
+
+  <!-- ═══════════════════════════════════════════ MODAL -->
+  <div id="modal-overlay" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal" id="modal">
+
+      <div class="modal-topbar">
+        <div class="modal-badges">
+          <span id="modal-tool-badge" class="badge badge--tool"></span>
+          <span id="modal-group-badge" class="badge badge--group"></span>
+          <span id="modal-task-badge" class="badge badge--task"></span>
+          <span id="modal-version" class="modal-version hidden"></span>
+        </div>
+        <button class="modal-close" id="modal-close" aria-label="Close">
+          <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-scroll">
+        <h2 id="modal-title" class="modal-title"></h2>
+
+        <div class="modal-meta">
+          <svg class="meta-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="8" cy="5" r="3" stroke="currentColor" stroke-width="1.3"/>
+            <path d="M2 14c0-3.314 2.686-6 6-6s6 2.686 6 6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+          </svg>
+          <span id="modal-author" class="modal-author"></span>
+          <span class="meta-dot">·</span>
+          <svg class="meta-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="2" y="3" width="12" height="11" rx="1.5" stroke="currentColor" stroke-width="1.3"/>
+            <path d="M5 1v4M11 1v4M2 7h12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+          </svg>
+          <span id="modal-date" class="modal-date"></span>
+        </div>
+
+        <div id="modal-tags" class="modal-tags"></div>
+
+        <!-- ── SKILL SECTION ── -->
+        <div id="skill-section" class="content-section">
+          <div id="modal-skill-description" class="skill-description"></div>
+
+          <div class="section-header">
+            <span class="section-label">Skill File</span>
+            <div class="skill-actions">
+              <span id="skill-filename" class="skill-filename"></span>
+              <button class="btn-download" id="download-btn">
+                <svg viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M9 2v10M5 8l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M3 14h12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                </svg>
+                Download
+              </button>
+            </div>
+          </div>
+          <div class="code-box code-box--skill">
+            <pre id="modal-skill-content" class="code-content">Loading skill file…</pre>
+          </div>
+        </div>
+
+        <!-- ── RATING SECTION ── -->
+        <div class="rating-section">
+          <div class="section-label">Rate this skill</div>
+          <div class="stars-wrap">
+            <div class="stars-interactive" id="rating-stars" role="group" aria-label="Star rating">
+              <button class="star" data-value="1" aria-label="1 star">&#9733;</button>
+              <button class="star" data-value="2" aria-label="2 stars">&#9733;</button>
+              <button class="star" data-value="3" aria-label="3 stars">&#9733;</button>
+              <button class="star" data-value="4" aria-label="4 stars">&#9733;</button>
+              <button class="star" data-value="5" aria-label="5 stars">&#9733;</button>
+            </div>
+            <span id="community-rating" class="community-rating"></span>
+          </div>
+          <p id="rating-feedback" class="rating-feedback"></p>
+        </div>
+
+      </div><!-- /modal-scroll -->
+    </div><!-- /modal -->
+  </div><!-- /modal-overlay -->
+
+  <!-- ═══════════════════════════════════════════ FOOTER -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <img src="assets/sap-logo.svg" alt="SAP" class="footer-logo" />
+      <span class="footer-sep">|</span>
+      <span>CSMS Skills Library</span>
+      <span class="footer-sep">·</span>
+      <span>SAP Internal</span>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
