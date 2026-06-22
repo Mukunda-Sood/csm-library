@@ -3,9 +3,9 @@
   "tools": [
     "EKX",
     "CSE",
-    "Joule Desktop"
-    "Experience Agent"
-    "Joule for Consultants"
+    "Joule Desktop",
+    "Experience Agent",
+    "Joule for Consultants",
   ],
   "customerGroups": [
     "CSM",
