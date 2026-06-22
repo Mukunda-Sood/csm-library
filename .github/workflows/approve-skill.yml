@@ -27,7 +27,6 @@ jobs:
           script: |
             const fs   = require('fs');
             const path = require('path');
-            const exec = require('@actions/exec');
 
             // ── Gate: only process skill-submission issues ────────────────────
             const issue      = context.payload.issue;
