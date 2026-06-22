@@ -73,13 +73,14 @@ jobs:
             const title         = getLine('Title');
             const description   = getBlock('Description');
             const tool          = getLine('Tool');
-            const customerGroup = getLine('Customer Group');
-            const task          = getLine('Task');
+            const customerGroup = getLine('Customer Group') === '_No response_' ? '' : getLine('Customer Group');
+            const task          = getLine('Task') === '_No response_' ? '' : getLine('Task');
             const tagsRaw       = getLine('Tags');
             const author        = getLine('Author');
-            const authorRole    = getLine('Author Role');
+            const authorRole    = getLine('Author Role') === '_No response_' ? '' : getLine('Author Role');
             const version       = getLine('Version') || '1.0.0';
-            const onePagerUrl   = getLine('One-Pager URL');
+            const rawOnePager   = getLine('One-Pager URL');
+            const onePagerUrl   = (rawOnePager && rawOnePager !== '_No response_' && rawOnePager.startsWith('http')) ? rawOnePager : '';
             let   skillContent  = getBlock('Skill File Content');
 
             // ── Validate required fields ──────────────────────────────────────
