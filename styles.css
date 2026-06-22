@@ -467,12 +467,12 @@ button { cursor: pointer; font-family: inherit; }
 
 /* ── Card Footer ─────────────────────────────────────────────────── */
 .card-footer {
-  padding: 12px 22px 16px;
+  padding: 12px 22px 14px;
   border-top: 1px solid var(--gray-1);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
 }
 
 .card-author {
@@ -480,6 +480,7 @@ button { cursor: pointer; font-family: inherit; }
   align-items: center;
   gap: 7px;
   min-width: 0;
+  flex: 1;
 }
 
 .author-avatar {
@@ -496,12 +497,6 @@ button { cursor: pointer; font-family: inherit; }
   flex-shrink: 0;
 }
 
-.author-info {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
 .author-name {
   font-size: 12px;
   font-weight: 600;
@@ -511,32 +506,56 @@ button { cursor: pointer; font-family: inherit; }
   text-overflow: ellipsis;
 }
 
-.author-date {
-  font-size: 11px;
-  color: var(--text-muted);
-}
-
-.card-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 7px 14px;
-  background: var(--sap-dark-navy);
-  color: var(--white);
-  border-radius: var(--radius-sm);
-  font-size: 13px;
-  font-weight: 500;
-  border: none;
-  transition: background var(--transition);
-  white-space: nowrap;
+.card-actions {
+  display: flex;
+  gap: 6px;
   flex-shrink: 0;
 }
 
-.card-cta:hover {
-  background: var(--sap-link-blue);
+.card-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid transparent;
+  transition: background var(--transition), border-color var(--transition), color var(--transition);
+  white-space: nowrap;
+  cursor: pointer;
 }
 
-.card-cta svg { width: 13px; height: 13px; }
+.card-btn svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+.card-btn--primary {
+  background: var(--sap-dark-navy);
+  color: var(--white);
+  border-color: var(--sap-dark-navy);
+}
+.card-btn--primary:hover {
+  background: var(--sap-link-blue);
+  border-color: var(--sap-link-blue);
+}
+
+.card-btn--outline {
+  background: transparent;
+  color: var(--sap-dark-navy);
+  border-color: var(--sap-dark-navy);
+}
+.card-btn--outline:hover {
+  background: var(--sap-dark-navy);
+  color: var(--white);
+}
+
+/* ── Card Rating Bar ─────────────────────────────────────────────── */
+.card-rating-bar {
+  padding: 8px 22px 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-top: 1px solid var(--gray-1);
+}
 
 /* ── Empty State ─────────────────────────────────────────────────── */
 .empty-state {
@@ -747,28 +766,48 @@ button { cursor: pointer; font-family: inherit; }
   word-break: break-word;
 }
 
-/* ── Prompt Actions ──────────────────────────────────────────────── */
-.btn-copy {
+/* ── Modal Action Buttons ────────────────────────────────────────── */
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+
+.modal-action-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 7px 14px;
-  background: var(--sap-dark-navy);
-  color: var(--white);
-  border: none;
+  gap: 8px;
+  padding: 10px 20px;
   border-radius: var(--radius-sm);
   font-family: inherit;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
-  transition: background var(--transition);
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition), color var(--transition);
   white-space: nowrap;
 }
 
-.btn-copy:hover { background: var(--sap-link-blue); }
-.btn-copy svg { width: 14px; height: 14px; }
+.modal-action-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
 
-.btn-copy.copied {
-  background: #0A7A3E;
+.modal-action-btn--primary {
+  background: var(--sap-dark-navy);
+  color: var(--white);
+  border: 1px solid var(--sap-dark-navy);
+}
+.modal-action-btn--primary:hover {
+  background: var(--sap-link-blue);
+  border-color: var(--sap-link-blue);
+}
+
+.modal-action-btn--secondary {
+  background: transparent;
+  color: var(--sap-dark-navy);
+  border: 1px solid var(--sap-dark-navy);
+}
+.modal-action-btn--secondary:hover {
+  background: var(--sap-dark-navy);
+  color: var(--white);
 }
 
 /* ── Skill Description ───────────────────────────────────────────── */
@@ -782,42 +821,6 @@ button { cursor: pointer; font-family: inherit; }
   border-radius: var(--radius-md);
   border-left: 3px solid var(--sap-blue);
 }
-
-/* ── Skill Actions ───────────────────────────────────────────────── */
-.skill-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.skill-filename {
-  font-size: 12px;
-  color: var(--gray-4);
-  font-family: monospace;
-  background: var(--gray-1);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 3px 8px;
-}
-
-.btn-download {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 14px;
-  background: var(--sap-dark-navy);
-  color: var(--white);
-  border: none;
-  border-radius: var(--radius-sm);
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  transition: background var(--transition);
-  white-space: nowrap;
-}
-
-.btn-download:hover { background: var(--sap-link-blue); }
-.btn-download svg { width: 14px; height: 14px; }
 
 /* ── Rating Section ──────────────────────────────────────────────── */
 .rating-section {

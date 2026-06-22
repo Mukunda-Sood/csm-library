@@ -1,5 +1,10 @@
 {
   "repoUrl": "https://github.com/Mukunda-Sood/csm-library",
+  "tools": [
+    "EKX",
+    "CSE",
+    "Joule Desktop"
+  ],
   "customerGroups": [
     "CSM",
     "CRE"

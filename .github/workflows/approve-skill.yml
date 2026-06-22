@@ -80,6 +80,7 @@ jobs:
             const author        = getLine('Author');
             const authorRole    = getLine('Author Role');
             const version       = getLine('Version') || '1.0.0';
+            const onePagerUrl   = getLine('One-Pager URL');
             let   skillContent  = getBlock('Skill File Content');
 
             // ── Validate required fields ──────────────────────────────────────
@@ -165,6 +166,7 @@ jobs:
               tags,
               version,
               filename,
+              onePagerUrl:    onePagerUrl || '',
               communityRating: 0,
               ratingCount:    0,
               dateAdded:      today,

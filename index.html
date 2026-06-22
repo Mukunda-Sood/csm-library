@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CSMS Skills Library</title>
+  <title>CSM Skills Library</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -15,7 +15,7 @@
         <img src="assets/sap-logo.svg" alt="SAP" class="sap-logo" />
         <div class="header-divider"></div>
         <div class="header-text">
-          <span class="header-name">CSMS Skills Library</span>
+          <span class="header-name">CSM Skills Library</span>
           <span class="header-sub">AI Skills Marketplace</span>
         </div>
       </div>
@@ -33,9 +33,9 @@
   <!-- ═══════════════════════════════════════════ HERO -->
   <section class="hero">
     <div class="hero-inner">
-      <h1 class="hero-title">CSMS Skills Marketplace</h1>
+      <h1 class="hero-title">CSM Skills Marketplace</h1>
       <p class="hero-sub">
-        Discover and share AI skill files for the CSMS team.<br />
+        Discover and share AI skill files for the CSM team.<br />
         Find what you need. Contribute what you know.
       </p>
     </div>
@@ -45,13 +45,11 @@
   <div class="library-wrap">
 
     <div class="controls-bar">
-      <!-- Count -->
       <div class="skills-count-wrap">
         <span id="skills-count">—</span>
         <span class="skills-count-label">skills</span>
       </div>
 
-      <!-- Filters -->
       <div class="filters">
         <div class="search-wrap">
           <svg class="search-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -148,26 +146,24 @@
 
         <div id="modal-tags" class="modal-tags"></div>
 
-        <!-- ── SKILL SECTION ── -->
-        <div id="skill-section" class="content-section">
-          <div id="modal-skill-description" class="skill-description"></div>
+        <div id="modal-skill-description" class="skill-description"></div>
 
-          <div class="section-header">
-            <span class="section-label">Skill File</span>
-            <div class="skill-actions">
-              <span id="skill-filename" class="skill-filename"></span>
-              <button class="btn-download" id="download-btn">
-                <svg viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M9 2v10M5 8l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M3 14h12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-                </svg>
-                Download
-              </button>
-            </div>
-          </div>
-          <div class="code-box code-box--skill">
-            <pre id="modal-skill-content" class="code-content">Loading skill file…</pre>
-          </div>
+        <!-- ── ACTION BUTTONS ── -->
+        <div class="modal-actions">
+          <button class="modal-action-btn modal-action-btn--primary" id="download-btn">
+            <svg viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M9 2v10M5 8l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M3 14h12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+            Download Skill File
+          </button>
+          <button class="modal-action-btn modal-action-btn--secondary hidden" id="one-pager-btn">
+            <svg viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="3" y="2" width="12" height="14" rx="1.5" stroke="currentColor" stroke-width="1.4"/>
+              <path d="M6 6h6M6 9h6M6 12h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            </svg>
+            View One-Pager
+          </button>
         </div>
 
         <!-- ── RATING SECTION ── -->
@@ -195,7 +191,7 @@
     <div class="footer-inner">
       <img src="assets/sap-logo.svg" alt="SAP" class="footer-logo" />
       <span class="footer-sep">|</span>
-      <span>CSMS Skills Library</span>
+      <span>CSM Skills Library</span>
       <span class="footer-sep">·</span>
       <span>SAP Internal</span>
     </div>
