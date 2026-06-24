@@ -64,5 +64,26 @@
     "dateAdded": "2026-06-24",
     "featured": false,
     "status": "approved"
+  },
+  {
+    "id": "joule-zip",
+    "title": "zip",
+    "description": "d",
+    "author": "d",
+    "authorRole": "d",
+    "tool": "Joule Desktop",
+    "customerGroup": "CRE",
+    "task": "d",
+    "tags": [
+      "d"
+    ],
+    "version": "1.0.0",
+    "filename": "joule-zip.md",
+    "onePagerUrl": "",
+    "communityRating": 0,
+    "ratingCount": 0,
+    "dateAdded": "2026-06-24",
+    "featured": false,
+    "status": "approved"
   }
 ]
