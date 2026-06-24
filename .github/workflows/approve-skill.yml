@@ -122,11 +122,13 @@ jobs:
             // ── Helper: extract .md from a zip buffer ─────────────────────────
             async function extractMdFromZip(buf) {
               const dir     = await unzipper.Open.buffer(buf);
-              const mdFiles = dir.files.filter(f => !f.type && f.path.endsWith('.md'));
+              // Filter: path ends in .md and does not end in / (exclude directory entries)
+              const mdFiles = dir.files.filter(f => f.path.endsWith('.md') && !f.path.endsWith('/'));
+              core.info(`Found ${mdFiles.length} .md file(s) in zip: ${mdFiles.map(f => f.path).join(', ')}`);
               if (mdFiles.length === 0) throw new Error('No .md file found inside the zip.');
+              // Prefer SKILL.md anywhere, then shallowest path, then first found
               const preferred = mdFiles.find(f => path.basename(f.path) === 'SKILL.md')
-                             || mdFiles.find(f => !f.path.includes('/'))
-                             || mdFiles[0];
+                             || mdFiles.sort((a, b) => a.path.split('/').length - b.path.split('/').length)[0];
               core.info(`Extracting ${preferred.path} from zip`);
               const content = await preferred.buffer();
               return content.toString('utf8');
