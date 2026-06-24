@@ -85,5 +85,28 @@
     "dateAdded": "2026-06-24",
     "featured": false,
     "status": "approved"
+  },
+  {
+    "id": "ekx-ziptest",
+    "title": "ziptest",
+    "description": "ziptest",
+    "author": "s",
+    "authorRole": "s",
+    "tool": "EKX",
+    "customerGroup": "CSM",
+    "task": "s",
+    "tags": [
+      "s"
+    ],
+    "version": "1.0.0",
+    "filename": "ekx-ziptest.md",
+    "originalFilename": "ai-adoption-pptx-(1).zip",
+    "zipFilename": "ekx-ziptest.zip",
+    "onePagerUrl": "",
+    "communityRating": 0,
+    "ratingCount": 0,
+    "dateAdded": "2026-06-24",
+    "featured": false,
+    "status": "approved"
   }
 ]
