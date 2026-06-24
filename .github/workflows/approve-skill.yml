@@ -135,7 +135,9 @@ jobs:
             }
 
             // ── Resolve skill content: file upload or pasted text ─────────────
-            let skillContent = '';
+            let skillContent    = '';
+            let originalFilename = '';
+            let zipFilename      = '';
             const attachmentMatch = rawContent.match(/\[.*?\]\((https:\/\/github\.com\/user-attachments\/files\/[^\)]+)\)/);
 
             if (attachmentMatch) {
@@ -145,10 +147,17 @@ jobs:
               try {
                 const buf = await download(fileUrl);
                 if (originalName.toLowerCase().endsWith('.zip')) {
-                  core.info('File is a zip — extracting .md content');
-                  skillContent = await extractMdFromZip(buf);
+                  core.info('File is a zip — extracting .md content and saving zip');
+                  skillContent     = await extractMdFromZip(buf);
+                  zipFilename      = `${skillId}.zip`;
+                  // Save the original zip file so users can download the full package
+                  fs.writeFileSync(path.join(ws, 'skill-files', zipFilename), buf);
+                  core.info(`Saved zip as skill-files/${zipFilename}`);
+                  // Original filename is the uploaded zip name (clean it slightly)
+                  originalFilename = originalName.replace(/\s+/g, '-');
                 } else {
-                  skillContent = buf.toString('utf8');
+                  skillContent     = buf.toString('utf8');
+                  originalFilename = originalName.replace(/\s+/g, '-');
                 }
                 core.info('File content resolved successfully');
               } catch (e) {
@@ -215,12 +224,14 @@ jobs:
               customerGroup:   customerGroup || '',
               task:            task || '',
               tags, version, filename,
-              onePagerUrl:     onePagerUrl || '',
-              communityRating: 0,
-              ratingCount:     0,
-              dateAdded:       today,
-              featured:        false,
-              status:          'approved',
+              originalFilename: originalFilename || filename,
+              zipFilename:      zipFilename || '',
+              onePagerUrl:      onePagerUrl || '',
+              communityRating:  0,
+              ratingCount:      0,
+              dateAdded:        today,
+              featured:         false,
+              status:           'approved',
             };
 
             // ── Write files to disk ───────────────────────────────────────────
@@ -251,7 +262,9 @@ jobs:
             await exec.exec('git', ['config', 'user.name',  'github-actions[bot]']);
             await exec.exec('git', ['config', 'user.email', 'github-actions[bot]@users.noreply.github.com']);
             await exec.exec('git', ['checkout', '-b', branch]);
-            await exec.exec('git', ['add', 'data/skills.json', `skill-files/${filename}`]);
+            const filesToAdd = ['data/skills.json', `skill-files/${filename}`];
+            if (zipFilename) filesToAdd.push(`skill-files/${zipFilename}`);
+            await exec.exec('git', ['add', ...filesToAdd]);
             await exec.exec('git', ['commit', '-m', `feat: add skill "${title}" (closes #${issueData.number})`]);
             await exec.exec('git', ['push', 'origin', branch]);
 

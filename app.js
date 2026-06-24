@@ -48,6 +48,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     modalTags:       document.getElementById('modal-tags'),
     skillDescription:document.getElementById('modal-skill-description'),
     downloadBtn:     document.getElementById('download-btn'),
+    downloadZipBtn:  document.getElementById('download-zip-btn'),
     onePagerBtn:     document.getElementById('one-pager-btn'),
     ratingStars:     document.getElementById('rating-stars'),
     communityRating: document.getElementById('community-rating'),
@@ -294,8 +295,16 @@ function openModal(item) {
     .map(t => `<span class="badge badge--tag">${escHtml(t)}</span>`).join('');
   DOM.skillDescription.textContent = item.description || '';
 
-  // Download button — fetches file on click so we always have fresh content
+  // Download .md — use originalFilename if available so user gets the real name
   DOM.downloadBtn.onclick = () => downloadSkillFile(item);
+
+  // Download zip — only show if zipFilename exists
+  if (item.zipFilename) {
+    DOM.downloadZipBtn.classList.remove('hidden');
+    DOM.downloadZipBtn.onclick = () => downloadZipFile(item);
+  } else {
+    DOM.downloadZipBtn.classList.add('hidden');
+  }
 
   // One-pager button — show only if url exists
   if (item.onePagerUrl) {
@@ -330,7 +339,7 @@ function closeModal() {
 }
 
 // ─────────────────────────────────────────────
-// Download Skill File
+// Download Skill File (.md)
 // ─────────────────────────────────────────────
 async function downloadSkillFile(item) {
   if (!item.filename) return;
@@ -341,13 +350,36 @@ async function downloadSkillFile(item) {
     const url      = URL.createObjectURL(blob);
     const a        = document.createElement('a');
     a.href         = url;
-    a.download     = item.filename;
+    // Use originalFilename if present so user gets the real name back
+    a.download     = item.originalFilename || item.filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   } catch {
     alert('Could not download the skill file. Please try again later.');
+  }
+}
+
+// ─────────────────────────────────────────────
+// Download Full Package (.zip)
+// ─────────────────────────────────────────────
+async function downloadZipFile(item) {
+  if (!item.zipFilename) return;
+  try {
+    const res  = await fetch(`skill-files/${item.zipFilename}`);
+    const blob = await res.blob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    // Use originalFilename (the zip name) if available, otherwise fall back
+    a.download = item.originalFilename || item.zipFilename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch {
+    alert('Could not download the zip package. Please try again later.');
   }
 }
 
