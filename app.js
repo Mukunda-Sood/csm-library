@@ -344,14 +344,15 @@ function closeModal() {
 async function downloadSkillFile(item) {
   if (!item.filename) return;
   try {
-    const res      = await fetch(`skill-files/${item.filename}`);
-    const text     = await res.text();
-    const blob     = new Blob([text], { type: 'text/markdown;charset=utf-8' });
-    const url      = URL.createObjectURL(blob);
-    const a        = document.createElement('a');
-    a.href         = url;
-    // Use originalFilename if present so user gets the real name back
-    a.download     = item.originalFilename || item.filename;
+    const res  = await fetch(`skill-files/${item.filename}`);
+    const text = await res.text();
+    const blob = new Blob([text], { type: 'text/markdown;charset=utf-8' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    // Derive a clean .md filename — strip any original extension and use .md
+    const baseName = (item.originalFilename || item.filename).replace(/\.[^.]+$/, '');
+    a.download = baseName + '.md';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
