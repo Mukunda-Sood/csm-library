@@ -43,5 +43,26 @@
     "dateAdded": "2026-06-22",
     "featured": false,
     "status": "approved"
+  },
+  {
+    "id": "ekx-test",
+    "title": "test",
+    "description": "test",
+    "author": "test",
+    "authorRole": "EKX",
+    "tool": "EKX",
+    "customerGroup": "CSM",
+    "task": "test",
+    "tags": [
+      "test"
+    ],
+    "version": "1.0.0",
+    "filename": "ekx-test.md",
+    "onePagerUrl": "",
+    "communityRating": 0,
+    "ratingCount": 0,
+    "dateAdded": "2026-06-24",
+    "featured": false,
+    "status": "approved"
   }
 ]
