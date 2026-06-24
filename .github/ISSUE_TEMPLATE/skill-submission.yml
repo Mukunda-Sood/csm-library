@@ -110,8 +110,8 @@ body:
     id: skill-file-content
     attributes:
       label: Skill File Content
-      description: "Paste the raw markdown content of your skill file here. Do NOT wrap it in a code fence — paste the markdown directly."
-      placeholder: "# Your Skill Title\n\n## When to Use This Skill\n\n...\n\n## Core Principles\n\n..."
+      description: "**Preferred: drag and drop your .md or .zip file directly into this box.** GitHub will upload it and insert a link automatically. Alternatively, paste the raw markdown text directly."
+      placeholder: "Drag and drop your .md or .zip file here, or paste raw markdown text..."
     validations:
       required: true
 
