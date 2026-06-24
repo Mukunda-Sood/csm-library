@@ -28,15 +28,15 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const fs       = require('fs');
-            const path     = require('path');
-            const https    = require('https');
-            const http     = require('http');
-            const unzipper = require(path.join(process.env.GITHUB_WORKSPACE, 'node_modules/unzipper'));
+            const fs         = require('fs');
+            const path       = require('path');
+            const https      = require('https');
+            const http       = require('http');
+            const unzipper   = require(path.join(process.env.GITHUB_WORKSPACE, 'node_modules/unzipper'));
 
             // ── Gate: only process skill-submission issues ────────────────────
-            const issue      = context.payload.issue;
-            const labelNames = issue.labels.map(l => l.name);
+            const issueData  = context.payload.issue;
+            const labelNames = issueData.labels.map(l => l.name);
 
             if (!labelNames.includes('skill-submission')) {
               core.info('Issue does not have skill-submission label. Skipping.');
@@ -58,7 +58,7 @@ jobs:
               return result;
             }
 
-            const fields = parseIssueBody(issue.body);
+            const fields = parseIssueBody(issueData.body);
 
             function getLine(label) {
               return (fields[label] || '').split('\n')[0].trim();
@@ -87,7 +87,7 @@ jobs:
             if (!title || !tool || !author || !rawContent) {
               await github.rest.issues.createComment({
                 owner: context.repo.owner, repo: context.repo.repo,
-                issue_number: issue.number,
+                issue_number: issueData.number,
                 body: [
                   '**Skill approval failed.** The following required fields are missing or empty:',
                   !title      ? '- Title' : '',
@@ -102,7 +102,7 @@ jobs:
               return;
             }
 
-            // ── Helper: download a URL to a buffer ───────────────────────────
+            // ── Helper: download a URL to a buffer ────────────────────────────
             function download(url) {
               return new Promise((resolve, reject) => {
                 const client = url.startsWith('https') ? https : http;
@@ -120,12 +120,10 @@ jobs:
             }
 
             // ── Helper: extract .md from a zip buffer ─────────────────────────
-            // Finds the first .md file in the zip (any folder depth)
             async function extractMdFromZip(buf) {
-              const dir = await unzipper.Open.buffer(buf);
+              const dir     = await unzipper.Open.buffer(buf);
               const mdFiles = dir.files.filter(f => !f.type && f.path.endsWith('.md'));
               if (mdFiles.length === 0) throw new Error('No .md file found inside the zip.');
-              // Prefer a file at root or named SKILL.md; otherwise take first found
               const preferred = mdFiles.find(f => path.basename(f.path) === 'SKILL.md')
                              || mdFiles.find(f => !f.path.includes('/'))
                              || mdFiles[0];
@@ -135,7 +133,6 @@ jobs:
             }
 
             // ── Resolve skill content: file upload or pasted text ─────────────
-            // GitHub renders dragged files as: [filename](https://github.com/user-attachments/files/...)
             let skillContent = '';
             const attachmentMatch = rawContent.match(/\[.*?\]\((https:\/\/github\.com\/user-attachments\/files\/[^\)]+)\)/);
 
@@ -143,32 +140,27 @@ jobs:
               const fileUrl      = attachmentMatch[1];
               const originalName = (attachmentMatch[0].match(/\[([^\]]+)\]/) || [])[1] || '';
               core.info(`Detected uploaded file: ${originalName} — downloading from ${fileUrl}`);
-
               try {
                 const buf = await download(fileUrl);
-
                 if (originalName.toLowerCase().endsWith('.zip')) {
                   core.info('File is a zip — extracting .md content');
                   skillContent = await extractMdFromZip(buf);
                 } else {
-                  // Treat as plain .md
                   skillContent = buf.toString('utf8');
                 }
                 core.info('File content resolved successfully');
               } catch (e) {
                 await github.rest.issues.createComment({
                   owner: context.repo.owner, repo: context.repo.repo,
-                  issue_number: issue.number,
+                  issue_number: issueData.number,
                   body: `**Skill approval failed.** Could not download or read the uploaded file.\n\nError: ${e.message}\n\nPlease re-upload the file or paste the raw markdown text directly, then re-add the \`skill-approved\` label.`,
                 });
                 core.setFailed('File download/extraction failed: ' + e.message);
                 return;
               }
             } else {
-              // No attachment — treat rawContent as pasted markdown
               core.info('No file attachment detected — using pasted text');
               skillContent = rawContent;
-              // Strip accidental outer code fence
               const fenceMatch = skillContent.match(/^```[^\n]*\n([\s\S]*?)\n```$/);
               if (fenceMatch) {
                 skillContent = fenceMatch[1];
@@ -206,7 +198,6 @@ jobs:
               core.warning('Could not read skills.json: ' + e.message);
             }
 
-            // Find a unique ID
             const existingIds = new Set(skills.map(s => s.id));
             let skillId = baseId, counter = 2;
             while (existingIds.has(skillId)) skillId = `${baseId}-${counter++}`;
@@ -249,7 +240,7 @@ jobs:
             if (branchExists) {
               await github.rest.issues.createComment({
                 owner: context.repo.owner, repo: context.repo.repo,
-                issue_number: issue.number,
+                issue_number: issueData.number,
                 body: `Branch \`${branch}\` already exists — a PR may have already been created. Check open PRs before re-approving.`,
               });
               return;
@@ -259,7 +250,7 @@ jobs:
             await exec.exec('git', ['config', 'user.email', 'github-actions[bot]@users.noreply.github.com']);
             await exec.exec('git', ['checkout', '-b', branch]);
             await exec.exec('git', ['add', 'data/skills.json', `skill-files/${filename}`]);
-            await exec.exec('git', ['commit', '-m', `feat: add skill "${title}" (closes #${issue.number})`]);
+            await exec.exec('git', ['commit', '-m', `feat: add skill "${title}" (closes #${issueData.number})`]);
             await exec.exec('git', ['push', 'origin', branch]);
 
             // ── Open PR ───────────────────────────────────────────────────────
@@ -270,7 +261,7 @@ jobs:
               body: [
                 `## New Skill: ${title}`,
                 ``,
-                `Auto-generated from issue #${issue.number}.`,
+                `Auto-generated from issue #${issueData.number}.`,
                 ``,
                 `| Field | Value |`,
                 `|-------|-------|`,
@@ -297,261 +288,8 @@ jobs:
             // ── Comment on issue ──────────────────────────────────────────────
             await github.rest.issues.createComment({
               owner: context.repo.owner, repo: context.repo.repo,
-              issue_number: issue.number,
+              issue_number: issueData.number,
               body: `Your skill submission has been queued for review!\n\n**Pull request:** ${pr.data.html_url}\n\nOnce merged, **${title}** will appear on the site automatically.`,
             });
 
             core.info(`Done. PR #${pr.data.number} opened for "${title}".`);
-
-
-            // ── Gate: only process skill-submission issues ────────────────────
-            const issue      = context.payload.issue;
-            const labelNames = issue.labels.map(l => l.name);
-
-            if (!labelNames.includes('skill-submission')) {
-              core.info('Issue does not have skill-submission label. Skipping.');
-              return;
-            }
-
-            // ── Parse issue body ──────────────────────────────────────────────
-            // GitHub Issue forms render as:
-            //   ### Field Label
-            //
-            //   Value text
-            //
-            // Split on "### " at start of a line to extract each field.
-            function parseIssueBody(body) {
-              const result = {};
-              const parts  = (body || '').split(/^### /m);
-              for (const part of parts) {
-                if (!part.trim()) continue;
-                const nl = part.indexOf('\n');
-                if (nl === -1) continue;
-                const heading = part.slice(0, nl).trim();
-                const value   = part.slice(nl).trim();
-                result[heading] = value;
-              }
-              return result;
-            }
-
-            const fields = parseIssueBody(issue.body);
-
-            // Single-line input fields: take only the first line
-            function getLine(label) {
-              return (fields[label] || '').split('\n')[0].trim();
-            }
-
-            // Multi-line textarea fields: take the full trimmed block
-            function getBlock(label) {
-              return (fields[label] || '').trim();
-            }
-
-            const title         = getLine('Title');
-            const description   = getBlock('Description');
-            const tool          = getLine('Tool');
-            const customerGroup = getLine('Customer Group') === '_No response_' ? '' : getLine('Customer Group');
-            const task          = getLine('Task') === '_No response_' ? '' : getLine('Task');
-            const tagsRaw       = getLine('Tags');
-            const author        = getLine('Author');
-            const authorRole    = getLine('Author Role') === '_No response_' ? '' : getLine('Author Role');
-            const version       = getLine('Version') || '1.0.0';
-            const rawOnePager   = getLine('One-Pager URL');
-            const onePagerUrl   = (rawOnePager && rawOnePager !== '_No response_' && rawOnePager.startsWith('http')) ? rawOnePager : '';
-            let   skillContent  = getBlock('Skill File Content');
-
-            // ── Validate required fields ──────────────────────────────────────
-            if (!title || !tool || !author || !skillContent) {
-              await github.rest.issues.createComment({
-                owner:        context.repo.owner,
-                repo:         context.repo.repo,
-                issue_number: issue.number,
-                body: [
-                  '**Skill approval failed.** The following required fields are missing or empty:',
-                  !title        ? '- Title' : '',
-                  !tool         ? '- Tool' : '',
-                  !author       ? '- Author' : '',
-                  !skillContent ? '- Skill File Content' : '',
-                  '',
-                  'Please edit the issue to correct these fields, then remove and re-add the `skill-approved` label.',
-                ].filter(l => l !== null).join('\n'),
-              });
-              core.setFailed('Required fields missing from issue body.');
-              return;
-            }
-
-            // ── Strip accidental outer code fence from skill content ──────────
-            // Users sometimes wrap their markdown in ```markdown ... ``` despite instructions.
-            const fenceMatch = skillContent.match(/^```[^\n]*\n([\s\S]*?)\n```$/);
-            if (fenceMatch) {
-              skillContent = fenceMatch[1];
-              core.info('Stripped outer code fence from skill file content.');
-            }
-
-            // ── Parse tags ────────────────────────────────────────────────────
-            const tags = tagsRaw
-              .split(',')
-              .map(t => t.trim().toLowerCase())
-              .filter(Boolean);
-
-            // ── Generate slug and unique skill ID ─────────────────────────────
-            function slugify(text) {
-              return text
-                .toLowerCase()
-                .replace(/[^a-z0-9\s-]/g, '')
-                .replace(/\s+/g, '-')
-                .replace(/-+/g, '-')
-                .replace(/^-|-$/g, '');
-            }
-
-            const toolPrefix = slugify(tool).split('-')[0].slice(0, 10);
-            const titleSlug  = slugify(title);
-            const baseId     = `${toolPrefix}-${titleSlug}`;
-
-            // ── Load existing skills.json ─────────────────────────────────────
-            const ws         = process.env.GITHUB_WORKSPACE;
-            const skillsPath = path.join(ws, 'data', 'skills.json');
-            let skills = [];
-            try {
-              skills = JSON.parse(fs.readFileSync(skillsPath, 'utf8'));
-            } catch (e) {
-              core.warning('Could not read skills.json: ' + e.message);
-              skills = [];
-            }
-
-            // Find a unique ID
-            const existingIds = new Set(skills.map(s => s.id));
-            let skillId = baseId;
-            let counter = 2;
-            while (existingIds.has(skillId)) {
-              skillId = `${baseId}-${counter++}`;
-            }
-
-            const filename = `${skillId}.md`;
-            const today    = new Date().toISOString().slice(0, 10);
-
-            // ── Build new skill object ────────────────────────────────────────
-            const newSkill = {
-              id:             skillId,
-              title,
-              description,
-              author,
-              authorRole:     authorRole || '',
-              tool,
-              customerGroup:  customerGroup || '',
-              task:           task || '',
-              tags,
-              version,
-              filename,
-              onePagerUrl:    onePagerUrl || '',
-              communityRating: 0,
-              ratingCount:    0,
-              dateAdded:      today,
-              featured:       false,
-              status:         'approved',
-            };
-
-            // ── Write files to disk ───────────────────────────────────────────
-            fs.writeFileSync(
-              skillsPath,
-              JSON.stringify([...skills, newSkill], null, 2) + '\n',
-              'utf8'
-            );
-            core.info(`Updated skills.json with new skill: ${skillId}`);
-
-            fs.writeFileSync(
-              path.join(ws, 'skill-files', filename),
-              skillContent + '\n',
-              'utf8'
-            );
-            core.info(`Created skill file: skill-files/${filename}`);
-
-            // ── Git: create branch, commit, push ─────────────────────────────
-            const branch = `skill/${skillId}`;
-
-            // Check if branch already exists (handles re-labeling the same issue)
-            let branchExists = false;
-            try {
-              await exec.exec('git', ['ls-remote', '--exit-code', '--heads', 'origin', branch]);
-              branchExists = true;
-            } catch (e) {
-              // Branch does not exist — this is the expected path
-            }
-
-            if (branchExists) {
-              core.warning(`Branch ${branch} already exists. This issue may have been approved before. Skipping.`);
-              await github.rest.issues.createComment({
-                owner:        context.repo.owner,
-                repo:         context.repo.repo,
-                issue_number: issue.number,
-                body: `A branch for this skill (\`${branch}\`) already exists. A pull request may have already been created. Please check the open PRs before re-approving.`,
-              });
-              return;
-            }
-
-            await exec.exec('git', ['config', 'user.name',  'github-actions[bot]']);
-            await exec.exec('git', ['config', 'user.email', 'github-actions[bot]@users.noreply.github.com']);
-            await exec.exec('git', ['checkout', '-b', branch]);
-            await exec.exec('git', ['add',
-              'data/skills.json',
-              `skill-files/${filename}`,
-            ]);
-            await exec.exec('git', ['commit', '-m',
-              `feat: add skill "${title}" (closes #${issue.number})`,
-            ]);
-            await exec.exec('git', ['push', 'origin', branch]);
-            core.info(`Pushed branch: ${branch}`);
-
-            // ── Open pull request ─────────────────────────────────────────────
-            const prBody = [
-              `## New Skill: ${title}`,
-              ``,
-              `Auto-generated from issue #${issue.number}.`,
-              ``,
-              `| Field | Value |`,
-              `|-------|-------|`,
-              `| Author | ${author}${authorRole ? ` (${authorRole})` : ''} |`,
-              `| Tool | \`${tool}\` |`,
-              `| Customer Group | ${customerGroup || '—'} |`,
-              `| Task | ${task || '—'} |`,
-              `| Version | ${version} |`,
-              `| Skill ID | \`${skillId}\` |`,
-              `| Filename | \`skill-files/${filename}\` |`,
-              ``,
-              `### Review Checklist`,
-              ``,
-              `- [ ] Skill content is accurate and appropriate for the CSMS team`,
-              `- [ ] No customer-confidential data or internal-only system details included`,
-              `- [ ] Tags are lowercase and consistent with the existing taxonomy`,
-              `- [ ] \`skills.json\` entry is valid JSON with \`"status": "approved"\``,
-              `- [ ] Skill file exists at \`skill-files/${filename}\``,
-              ``,
-              `---`,
-              ``,
-              `Merging this PR will automatically redeploy the live site via GitHub Pages.`,
-            ].join('\n');
-
-            const pr = await github.rest.pulls.create({
-              owner: context.repo.owner,
-              repo:  context.repo.repo,
-              title: `Add skill: ${title}`,
-              head:  branch,
-              base:  'main',
-              body:  prBody,
-            });
-            core.info(`Pull request created: #${pr.data.number}`);
-
-            // ── Comment on the issue ──────────────────────────────────────────
-            await github.rest.issues.createComment({
-              owner:        context.repo.owner,
-              repo:         context.repo.repo,
-              issue_number: issue.number,
-              body: [
-                `Your skill submission has been queued for review!`,
-                ``,
-                `**Pull request:** ${pr.data.html_url}`,
-                ``,
-                `A moderator will review the PR. Once it is approved and merged, **${title}** will appear on the site automatically.`,
-              ].join('\n'),
-            });
-
-            core.info(`Done. PR #${pr.data.number} opened for skill "${title}".`);
