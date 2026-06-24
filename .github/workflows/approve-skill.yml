@@ -135,9 +135,9 @@ jobs:
             }
 
             // ── Resolve skill content: file upload or pasted text ─────────────
-            let skillContent    = '';
+            let skillContent     = '';
             let originalFilename = '';
-            let zipFilename      = '';
+            let zipBuf           = null; // held in memory until skillId is known
             const attachmentMatch = rawContent.match(/\[.*?\]\((https:\/\/github\.com\/user-attachments\/files\/[^\)]+)\)/);
 
             if (attachmentMatch) {
@@ -147,13 +147,9 @@ jobs:
               try {
                 const buf = await download(fileUrl);
                 if (originalName.toLowerCase().endsWith('.zip')) {
-                  core.info('File is a zip — extracting .md content and saving zip');
+                  core.info('File is a zip — extracting .md content');
                   skillContent     = await extractMdFromZip(buf);
-                  zipFilename      = `${skillId}.zip`;
-                  // Save the original zip file so users can download the full package
-                  fs.writeFileSync(path.join(ws, 'skill-files', zipFilename), buf);
-                  core.info(`Saved zip as skill-files/${zipFilename}`);
-                  // Original filename is the uploaded zip name (clean it slightly)
+                  zipBuf           = buf; // save for later once skillId exists
                   originalFilename = originalName.replace(/\s+/g, '-');
                 } else {
                   skillContent     = buf.toString('utf8');
@@ -213,8 +209,9 @@ jobs:
             let skillId = baseId, counter = 2;
             while (existingIds.has(skillId)) skillId = `${baseId}-${counter++}`;
 
-            const filename = `${skillId}.md`;
-            const today    = new Date().toISOString().slice(0, 10);
+            const filename    = `${skillId}.md`;
+            const zipFilename = zipBuf ? `${skillId}.zip` : '';
+            const today       = new Date().toISOString().slice(0, 10);
 
             // ── Build new skill object ────────────────────────────────────────
             const newSkill = {
@@ -225,7 +222,7 @@ jobs:
               task:            task || '',
               tags, version, filename,
               originalFilename: originalFilename || filename,
-              zipFilename:      zipFilename || '',
+              zipFilename:      zipFilename,
               onePagerUrl:      onePagerUrl || '',
               communityRating:  0,
               ratingCount:      0,
@@ -240,6 +237,11 @@ jobs:
 
             fs.writeFileSync(path.join(ws, 'skill-files', filename), skillContent + '\n', 'utf8');
             core.info(`Created skill-files/${filename}`);
+
+            if (zipBuf) {
+              fs.writeFileSync(path.join(ws, 'skill-files', zipFilename), zipBuf);
+              core.info(`Saved zip as skill-files/${zipFilename}`);
+            }
 
             // ── Git: branch, commit, push ─────────────────────────────────────
             const branch = `skill/${skillId}`;
