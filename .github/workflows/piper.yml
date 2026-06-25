@@ -1,0 +1,9 @@
+name: Piper workflow
+
+on:
+  workflow_dispatch:
+
+jobs:
+  piper:
+    uses: project-piper/piper-pipeline-github/.github/workflows/sap-piper-workflow.yml@v1
+    secrets: inherit
