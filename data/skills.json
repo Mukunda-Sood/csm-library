@@ -131,5 +131,28 @@
     "dateAdded": "2026-06-25",
     "featured": false,
     "status": "approved"
+  },
+  {
+    "id": "ekx-internal-account-analysis",
+    "title": "Internal Account Analysis",
+    "description": "Internal Account Analysis",
+    "author": "Arijeet",
+    "authorRole": "",
+    "tool": "EKX",
+    "customerGroup": "CSM",
+    "task": "",
+    "tags": [
+      "ex"
+    ],
+    "version": "1.0.0",
+    "filename": "ekx-internal-account-analysis.md",
+    "originalFilename": "\\[INTERNAL\\",
+    "zipFilename": "",
+    "onePagerUrl": "",
+    "communityRating": 0,
+    "ratingCount": 0,
+    "dateAdded": "2026-06-25",
+    "featured": false,
+    "status": "approved"
   }
 ]
