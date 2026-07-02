@@ -25,25 +25,25 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           python3 - <<'PYEOF'
-          import os, re, sys, json, urllib.request, zipfile, tempfile
+          import os, re, sys, json, urllib.request, zipfile
 
           body  = os.environ.get('ISSUE_BODY', '')
           token = os.environ.get('GITHUB_TOKEN', '')
 
           print(f'Body length: {len(body)}')
-          print(f'Body preview: {repr(body[:500])}')
 
-          # Find attachment URL — matches both github.com and github.tools.sap
-          # GitHub renders uploaded files as: [filename](https://.../user-attachments/files/...)
-          match = re.search(r'\[([^\]]*)\]\((https://[^\s)]*user-attachments/files/[^\s)]+)\)', body)
-          if not match:
+          # Extract the attachment URL directly — don't try to parse markdown link syntax
+          # because filenames with brackets like \[INTERNAL\] break bracket-based regex
+          url_match = re.search(r'https://[^\s)]+user-attachments/files/[^\s)]+', body)
+          if not url_match:
             print('No attachment URL found — will use pasted text')
             with open('/tmp/skill_file_result.json', 'w') as f:
               json.dump({'mode': 'pasted', 'content': '', 'originalFilename': '', 'zipPath': ''}, f)
             sys.exit(0)
 
-          original_name = match.group(1).strip() or 'skill.md'
-          url           = match.group(2)
+          url           = url_match.group(0).rstrip(')')
+          # Get the real filename from the URL (last path segment)
+          original_name = os.path.basename(url.split('?')[0])
           print(f'Detected file: {original_name}')
           print(f'URL: {url}')
 
@@ -56,7 +56,7 @@ jobs:
             data = resp.read()
           print(f'Downloaded {len(data)} bytes')
 
-          zip_path = ''
+          zip_path   = ''
           md_content = ''
 
           if original_name.lower().endswith('.zip'):
