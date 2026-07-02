@@ -22,7 +22,7 @@ jobs:
         id: extract
         env:
           ISSUE_BODY: ${{ github.event.issue.body }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.SKILL_DOWNLOAD_TOKEN }}
         run: |
           python3 - <<'PYEOF'
           import os, re, sys, json, zipfile
