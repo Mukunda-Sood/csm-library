@@ -22,9 +22,7 @@ jobs:
         id: extract
         env:
           ISSUE_BODY: ${{ github.event.issue.body }}
-          GITHUB_TOKEN: ${{ secrets.SKILL_DOWNLOAD_TOKEN }}
-          GH_TOKEN: ${{ secrets.SKILL_DOWNLOAD_TOKEN }}
-          GH_HOST: github.tools.sap
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           python3 - <<'PYEOF'
           import os, re, sys, json, zipfile, subprocess
@@ -33,12 +31,13 @@ jobs:
           token = os.environ.get('GITHUB_TOKEN', '')
 
           print(f'Body length: {len(body)}')
+          print(f'Body skill field: {repr(body[body.find("Skill File Content"):body.find("Skill File Content")+200] if "Skill File Content" in body else "NOT FOUND")}')
 
           url_match = re.search(r'https://[^\s)]+user-attachments/files/[^\s)]+', body)
           if not url_match:
             print('No attachment URL found — will use pasted text')
             with open('/tmp/skill_file_result.json', 'w') as f:
-              json.dump({'mode': 'pasted', 'content': '', 'originalFilename': '', 'zipPath': ''}, f)
+              json.dump({'mode': 'pasted', 'content': '', 'originalFilename': '', 'zipPath': '', 'attachmentUrl': ''}, f)
             sys.exit(0)
 
           url           = url_match.group(0).rstrip(')')
@@ -46,57 +45,59 @@ jobs:
           print(f'Detected file: {original_name}')
           print(f'URL: {url}')
 
-          # Get the token gh CLI is using (properly authenticated for GHES)
-          tok_result = subprocess.run(
-            ['gh', 'auth', 'token', '--hostname', 'github.tools.sap'],
-            capture_output=True, text=True
-          )
-          gh_token = tok_result.stdout.strip() if tok_result.returncode == 0 else token
-          print(f'Using token source: {"gh cli" if tok_result.returncode == 0 else "env"}')
-
           result = subprocess.run([
             'curl', '-L',
-            '-H', f'Authorization: token {gh_token}',
+            '-H', f'Authorization: token {token}',
             '-H', 'User-Agent: github-actions-skill-approver',
             '-o', '/tmp/skill_download',
             '--silent', '--show-error',
             url
           ], capture_output=True, text=True)
 
-          if result.returncode != 0:
-            print(f'curl error: {result.stderr}')
-            sys.exit(1)
-
-          with open('/tmp/skill_download', 'rb') as f:
-            data = f.read()
+          data = open('/tmp/skill_download', 'rb').read() if result.returncode == 0 else b''
           print(f'Downloaded {len(data)} bytes')
-          print(f'First bytes: {repr(data[:4])}')
 
           zip_path   = ''
           md_content = ''
+          attachment_url = ''
 
           if original_name.lower().endswith('.zip'):
-            if data[:2] != b'PK':
-              print(f'ERROR: Not a valid zip. Starts with: {repr(data[:100])}')
-              sys.exit(1)
-            print('File is a zip — extracting .md')
-            zip_path = '/tmp/skill_upload.zip'
-            with open(zip_path, 'wb') as f:
-              f.write(data)
-            with zipfile.ZipFile(zip_path) as z:
-              all_files = z.namelist()
-              print(f'Zip contents: {all_files}')
-              md_files = [n for n in all_files if n.endswith('.md') and not n.endswith('/')]
-              if not md_files:
-                print('ERROR: No .md file found in zip')
-                sys.exit(1)
-              preferred = next((n for n in md_files if os.path.basename(n) == 'SKILL.md'), None)
-              if not preferred:
-                preferred = sorted(md_files, key=lambda n: n.count('/'))[0]
-              print(f'Extracting: {preferred}')
-              md_content = z.read(preferred).decode('utf-8')
+            if data[:2] == b'PK':
+              print('Valid zip — extracting .md')
+              zip_path = '/tmp/skill_upload.zip'
+              open(zip_path, 'wb').write(data)
+              with zipfile.ZipFile(zip_path) as z:
+                md_files = [n for n in z.namelist() if n.endswith('.md') and not n.endswith('/')]
+                if not md_files:
+                  print('ERROR: No .md file found in zip')
+                  sys.exit(1)
+                preferred = next((n for n in md_files if os.path.basename(n) == 'SKILL.md'), None)
+                if not preferred:
+                  preferred = sorted(md_files, key=lambda n: n.count('/'))[0]
+                print(f'Extracting: {preferred}')
+                md_content = z.read(preferred).decode('utf-8')
+            else:
+              # Zip download blocked by GHES — store URL for moderator to handle manually
+              print('WARNING: Zip download blocked — storing attachment URL for manual handling')
+              attachment_url = url
+              md_content = ''
           else:
-            md_content = data.decode('utf-8')
+            if data and data[:1] not in (b'<', b' '):
+              md_content = data.decode('utf-8')
+            else:
+              print('WARNING: File download blocked — will fall back to pasted text')
+
+          result = {
+            'mode': 'file',
+            'content': md_content,
+            'originalFilename': original_name.replace(' ', '-'),
+            'zipPath': zip_path,
+            'attachmentUrl': attachment_url
+          }
+          with open('/tmp/skill_file_result.json', 'w') as f:
+            json.dump(result, f)
+          print('Done')
+          PYEOF
 
           result = {
             'mode': 'file',
@@ -192,12 +193,14 @@ jobs:
             let skillContent     = '';
             let originalFilename = '';
             let zipBuf           = null;
+            let attachmentUrl    = '';
 
             try {
               const result = JSON.parse(fs.readFileSync('/tmp/skill_file_result.json', 'utf8'));
               if (result.mode === 'file') {
                 skillContent     = result.content;
                 originalFilename = result.originalFilename;
+                attachmentUrl    = result.attachmentUrl || '';
                 if (result.zipPath) {
                   zipBuf = fs.readFileSync(result.zipPath);
                 }
@@ -206,7 +209,7 @@ jobs:
               core.info('No extracted file result — using pasted text from issue body');
             }
 
-            // Fall back to pasted text if no file was uploaded
+            // Fall back to pasted text if no file was uploaded or zip was blocked
             if (!skillContent.trim()) {
               skillContent = rawContent;
               const fenceMatch = skillContent.match(/^```[^\n]*\n([\s\S]*?)\n```$/);
@@ -328,6 +331,17 @@ jobs:
                 `| Skill ID | \`${skillId}\` |`,
                 `| Filename | \`skill-files/${filename}\` |`,
                 ``,
+                ...(attachmentUrl ? [
+                  `### ⚠️ Manual Step Required — Zip File`,
+                  ``,
+                  `The submitter uploaded a zip file but it could not be downloaded automatically due to GHES restrictions.`,
+                  ``,
+                  `**To add the zip package:**`,
+                  `1. Download the zip manually: [${originalFilename}](${attachmentUrl})`,
+                  `2. Upload it to \`skill-files/${skillId}.zip\` in this branch`,
+                  `3. Update \`skills.json\` to add \`"zipFilename": "${skillId}.zip"\``,
+                  ``,
+                ] : []),
                 `### Review Checklist`,
                 ``,
                 `- [ ] Skill content is accurate and appropriate`,
@@ -335,6 +349,7 @@ jobs:
                 `- [ ] Tags are consistent with existing taxonomy`,
                 `- [ ] \`skills.json\` entry is valid JSON with \`"status": "approved"\``,
                 `- [ ] Skill file exists at \`skill-files/${filename}\``,
+                ...(attachmentUrl ? [`- [ ] Zip file manually uploaded (see above)`] : []),
                 ``,
                 `Merging triggers an automatic redeploy.`,
               ].join('\n'),
