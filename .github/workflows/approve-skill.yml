@@ -99,17 +99,6 @@ jobs:
           print('Done')
           PYEOF
 
-          result = {
-            'mode': 'file',
-            'content': md_content,
-            'originalFilename': original_name.replace(' ', '-'),
-            'zipPath': zip_path
-          }
-          with open('/tmp/skill_file_result.json', 'w') as f:
-            json.dump(result, f)
-          print('Done — skill content extracted successfully')
-          PYEOF
-
       - name: Process skill submission
         uses: actions/github-script@v7
         env:
