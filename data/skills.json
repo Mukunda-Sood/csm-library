@@ -177,5 +177,28 @@
     "dateAdded": "2026-07-02",
     "featured": false,
     "status": "approved"
+  },
+  {
+    "id": "sd-dsd",
+    "title": "dsd",
+    "description": "ds",
+    "author": "d",
+    "authorRole": "s",
+    "tool": "sd",
+    "customerGroup": "ds",
+    "task": "ds",
+    "tags": [
+      "s"
+    ],
+    "version": "1.0.0",
+    "filename": "sd-dsd.md",
+    "originalFilename": "sd-dsd.md",
+    "zipFilename": "",
+    "onePagerUrl": "",
+    "communityRating": 0,
+    "ratingCount": 0,
+    "dateAdded": "2026-07-02",
+    "featured": false,
+    "status": "approved"
   }
 ]
