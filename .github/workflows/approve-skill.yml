@@ -16,10 +16,75 @@ jobs:
     runs-on: self-hosted
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      - name: Install unzipper
-        run: npm install unzipper
+      - name: Download and extract skill file
+        id: extract
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 - <<'PYEOF'
+          import os, re, sys, json, urllib.request, zipfile, tempfile
+
+          body  = os.environ.get('ISSUE_BODY', '')
+          token = os.environ.get('GITHUB_TOKEN', '')
+
+          # Find attachment URL in issue body
+          match = re.search(r'\[.*?\]\((https://github(?:\.tools\.sap)?/[^\s)]*user-attachments/files/[^\s)]+)\)', body)
+          if not match:
+            # No attachment — write sentinel so Node script uses pasted text
+            with open('/tmp/skill_file_result.json', 'w') as f:
+              json.dump({'mode': 'pasted', 'content': '', 'originalFilename': '', 'zipPath': ''}, f)
+            print('No attachment found — will use pasted text')
+            sys.exit(0)
+
+          url          = match.group(1)
+          original_name = re.search(r'\[([^\]]+)\]', match.group(0))
+          original_name = original_name.group(1) if original_name else 'skill.md'
+          print(f'Downloading: {original_name} from {url}')
+
+          req = urllib.request.Request(url, headers={
+            'Authorization': f'token {token}',
+            'User-Agent': 'github-actions-skill-approver'
+          })
+
+          with urllib.request.urlopen(req) as resp:
+            data = resp.read()
+
+          zip_path = ''
+          md_content = ''
+
+          if original_name.lower().endswith('.zip'):
+            # Save zip to temp location
+            zip_path = '/tmp/skill_upload.zip'
+            with open(zip_path, 'wb') as f:
+              f.write(data)
+            # Extract .md file
+            with zipfile.ZipFile(zip_path) as z:
+              md_files = [n for n in z.namelist() if n.endswith('.md') and not n.endswith('/')]
+              if not md_files:
+                print('ERROR: No .md file found in zip')
+                sys.exit(1)
+              # Prefer SKILL.md, then shallowest path
+              preferred = next((n for n in md_files if os.path.basename(n) == 'SKILL.md'), None)
+              if not preferred:
+                preferred = sorted(md_files, key=lambda n: n.count('/'))[0]
+              print(f'Extracting: {preferred}')
+              md_content = z.read(preferred).decode('utf-8')
+          else:
+            md_content = data.decode('utf-8')
+
+          result = {
+            'mode': 'file',
+            'content': md_content,
+            'originalFilename': original_name.replace(' ', '-'),
+            'zipPath': zip_path
+          }
+          with open('/tmp/skill_file_result.json', 'w') as f:
+            json.dump(result, f)
+          print('Done — skill content extracted successfully')
+          PYEOF
 
       - name: Process skill submission
         uses: actions/github-script@v7
@@ -29,11 +94,8 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const fs         = require('fs');
-            const path       = require('path');
-            const https      = require('https');
-            const http       = require('http');
-            const unzipper   = require(path.join(process.env.GITHUB_WORKSPACE, 'node_modules/unzipper'));
+            const fs   = require('fs');
+            const path = require('path');
 
             // ── Gate: only process skill-submission issues ────────────────────
             const issueData  = context.payload.issue;
@@ -103,83 +165,29 @@ jobs:
               return;
             }
 
-            // ── Helper: download a URL to a buffer ────────────────────────────
-            function download(url, token) {
-              return new Promise((resolve, reject) => {
-                const client  = url.startsWith('https') ? https : http;
-                const headers = {};
-                // GitHub attachment URLs require auth to download fully
-                if (token && url.includes('github.com')) {
-                  headers['Authorization'] = `token ${token}`;
-                }
-                headers['User-Agent'] = 'github-actions-skill-approver';
-                client.get(url, { headers }, res => {
-                  if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-                    return download(res.headers.location, token).then(resolve).catch(reject);
-                  }
-                  if (res.statusCode !== 200) return reject(new Error(`Download failed: ${res.statusCode}`));
-                  const chunks = [];
-                  res.on('data', c => chunks.push(c));
-                  res.on('end', () => resolve(Buffer.concat(chunks)));
-                  res.on('error', reject);
-                });
-              });
-            }
-
-            // ── Helper: extract .md from a zip buffer ─────────────────────────
-            async function extractMdFromZip(buf) {
-              const dir     = await unzipper.Open.buffer(buf);
-              // Filter: path ends in .md and does not end in / (exclude directory entries)
-              const mdFiles = dir.files.filter(f => f.path.endsWith('.md') && !f.path.endsWith('/'));
-              core.info(`Found ${mdFiles.length} .md file(s) in zip: ${mdFiles.map(f => f.path).join(', ')}`);
-              if (mdFiles.length === 0) throw new Error('No .md file found inside the zip.');
-              // Prefer SKILL.md anywhere, then shallowest path, then first found
-              const preferred = mdFiles.find(f => path.basename(f.path) === 'SKILL.md')
-                             || mdFiles.sort((a, b) => a.path.split('/').length - b.path.split('/').length)[0];
-              core.info(`Extracting ${preferred.path} from zip`);
-              const content = await preferred.buffer();
-              return content.toString('utf8');
-            }
-
-            // ── Resolve skill content: file upload or pasted text ─────────────
+            // ── Load file extraction results from Python step ─────────────────
             let skillContent     = '';
             let originalFilename = '';
-            let zipBuf           = null; // held in memory until skillId is known
-            const attachmentMatch = rawContent.match(/\[.*?\]\((https:\/\/github\.com\/user-attachments\/files\/[^\)]+)\)/);
+            let zipBuf           = null;
 
-            if (attachmentMatch) {
-              const fileUrl      = attachmentMatch[1];
-              const originalName = (attachmentMatch[0].match(/\[([^\]]+)\]/) || [])[1] || '';
-              core.info(`Detected uploaded file: ${originalName} — downloading from ${fileUrl}`);
-              try {
-                const buf = await download(fileUrl, process.env.GITHUB_TOKEN);
-                if (originalName.toLowerCase().endsWith('.zip')) {
-                  core.info('File is a zip — extracting .md content');
-                  skillContent     = await extractMdFromZip(buf);
-                  zipBuf           = buf; // save for later once skillId exists
-                  originalFilename = originalName.replace(/\s+/g, '-');
-                } else {
-                  skillContent     = buf.toString('utf8');
-                  originalFilename = originalName.replace(/\s+/g, '-');
+            try {
+              const result = JSON.parse(fs.readFileSync('/tmp/skill_file_result.json', 'utf8'));
+              if (result.mode === 'file') {
+                skillContent     = result.content;
+                originalFilename = result.originalFilename;
+                if (result.zipPath) {
+                  zipBuf = fs.readFileSync(result.zipPath);
                 }
-                core.info('File content resolved successfully');
-              } catch (e) {
-                await github.rest.issues.createComment({
-                  owner: context.repo.owner, repo: context.repo.repo,
-                  issue_number: issueData.number,
-                  body: `**Skill approval failed.** Could not download or read the uploaded file.\n\nError: ${e.message}\n\nPlease re-upload the file or paste the raw markdown text directly, then re-add the \`skill-approved\` label.`,
-                });
-                core.setFailed('File download/extraction failed: ' + e.message);
-                return;
               }
-            } else {
-              core.info('No file attachment detected — using pasted text');
+            } catch (e) {
+              core.info('No extracted file result — using pasted text from issue body');
+            }
+
+            // Fall back to pasted text if no file was uploaded
+            if (!skillContent.trim()) {
               skillContent = rawContent;
               const fenceMatch = skillContent.match(/^```[^\n]*\n([\s\S]*?)\n```$/);
-              if (fenceMatch) {
-                skillContent = fenceMatch[1];
-                core.info('Stripped outer code fence from pasted content');
-              }
+              if (fenceMatch) skillContent = fenceMatch[1];
             }
 
             if (!skillContent.trim()) {
