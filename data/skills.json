@@ -154,5 +154,28 @@
     "dateAdded": "2026-06-25",
     "featured": false,
     "status": "approved"
+  },
+  {
+    "id": "ee-ee",
+    "title": "ee",
+    "description": "ee",
+    "author": "ee",
+    "authorRole": "ee",
+    "tool": "ee",
+    "customerGroup": "ee",
+    "task": "ee",
+    "tags": [
+      "ee"
+    ],
+    "version": "1.0.0",
+    "filename": "ee-ee.md",
+    "originalFilename": "\\[INTERNAL\\",
+    "zipFilename": "",
+    "onePagerUrl": "",
+    "communityRating": 0,
+    "ratingCount": 0,
+    "dateAdded": "2026-07-02",
+    "featured": false,
+    "status": "approved"
   }
 ]
