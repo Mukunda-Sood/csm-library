@@ -47,7 +47,7 @@ jobs:
           # Use curl: -L follows redirects, --location-trusted sends auth only to original host
           import subprocess
           result = subprocess.run([
-            'curl', '-L', '--location-trusted',
+            'curl', '-L',
             '-H', f'Authorization: token {token}',
             '-H', 'User-Agent: github-actions-skill-approver',
             '-o', '/tmp/skill_download',
