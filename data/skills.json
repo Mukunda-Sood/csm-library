@@ -223,5 +223,28 @@
     "dateAdded": "2026-07-02",
     "featured": false,
     "status": "approved"
+  },
+  {
+    "id": "ekx-healthread",
+    "title": "Healthread",
+    "description": "Final Fresh Test",
+    "author": "Mukunda",
+    "authorRole": "",
+    "tool": "EKX",
+    "customerGroup": "CSM",
+    "task": "QUEERY",
+    "tags": [
+      "e"
+    ],
+    "version": "1.0.0",
+    "filename": "ekx-healthread.md",
+    "originalFilename": "INTERNAL.FINAL-Level_0-health-read.zip",
+    "zipFilename": "",
+    "onePagerUrl": "",
+    "communityRating": 0,
+    "ratingCount": 0,
+    "dateAdded": "2026-07-02",
+    "featured": false,
+    "status": "approved"
   }
 ]
