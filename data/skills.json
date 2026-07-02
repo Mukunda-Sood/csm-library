@@ -200,5 +200,28 @@
     "dateAdded": "2026-07-02",
     "featured": false,
     "status": "approved"
+  },
+  {
+    "id": "ekx-sd",
+    "title": "sd",
+    "description": "sd",
+    "author": "d",
+    "authorRole": "d",
+    "tool": "EKX",
+    "customerGroup": "CSN",
+    "task": "d",
+    "tags": [
+      "d"
+    ],
+    "version": "1.0.0",
+    "filename": "ekx-sd.md",
+    "originalFilename": "ai-adoption-pptx.1.zip",
+    "zipFilename": "",
+    "onePagerUrl": "",
+    "communityRating": 0,
+    "ratingCount": 0,
+    "dateAdded": "2026-07-02",
+    "featured": false,
+    "status": "approved"
   }
 ]
