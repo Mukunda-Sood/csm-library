@@ -45,7 +45,7 @@ jobs:
           print(f'Detected file: {original_name}')
           print(f'URL: {url}')
 
-          result = subprocess.run([
+          curl_result = subprocess.run([
             'curl', '-L',
             '-H', f'Authorization: token {token}',
             '-H', 'User-Agent: github-actions-skill-approver',
@@ -54,7 +54,7 @@ jobs:
             url
           ], capture_output=True, text=True)
 
-          data = open('/tmp/skill_download', 'rb').read() if result.returncode == 0 else b''
+          data = open('/tmp/skill_download', 'rb').read() if curl_result.returncode == 0 else b''
           print(f'Downloaded {len(data)} bytes')
 
           zip_path   = ''
@@ -87,7 +87,7 @@ jobs:
             else:
               print('WARNING: File download blocked — will fall back to pasted text')
 
-          result = {
+          output = {
             'mode': 'file',
             'content': md_content,
             'originalFilename': original_name.replace(' ', '-'),
@@ -95,7 +95,7 @@ jobs:
             'attachmentUrl': attachment_url
           }
           with open('/tmp/skill_file_result.json', 'w') as f:
-            json.dump(result, f)
+            json.dump(output, f)
           print('Done')
           PYEOF
 
