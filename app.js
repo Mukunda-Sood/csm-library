@@ -226,13 +226,21 @@ function createCard(item) {
             </svg>
             One-Pager
           </button>` : ''}
-        <button class="card-btn card-btn--primary download-card-btn" title="Download skill file">
-          <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M8 2v8M5 7l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M3 12h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-          Download
-        </button>
+        ${item.zipFilename ? `
+          <button class="card-btn card-btn--primary download-zip-card-btn" title="Download full package">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 2v8M5 7l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M3 12h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            Download (.zip)
+          </button>` : `
+          <button class="card-btn card-btn--primary download-card-btn" title="Download skill file">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 2v8M5 7l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M3 12h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            Download (.md)
+          </button>`}
       </div>
     </div>
     <div class="card-rating-bar">
@@ -251,11 +259,15 @@ function createCard(item) {
     if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest('.card-btn')) openModal(item);
   });
 
-  // Download button on card
-  card.querySelector('.download-card-btn').addEventListener('click', e => {
-    e.stopPropagation();
-    downloadSkillFile(item);
-  });
+  // Download button on card — md or zip depending on what exists
+  const downloadCardBtn    = card.querySelector('.download-card-btn');
+  const downloadZipCardBtn = card.querySelector('.download-zip-card-btn');
+  if (downloadCardBtn) {
+    downloadCardBtn.addEventListener('click', e => { e.stopPropagation(); downloadSkillFile(item); });
+  }
+  if (downloadZipCardBtn) {
+    downloadZipCardBtn.addEventListener('click', e => { e.stopPropagation(); downloadZipFile(item); });
+  }
 
   // One-pager button on card (only rendered if url exists)
   const onePagerCardBtn = card.querySelector('.one-pager-card-btn');
@@ -295,14 +307,14 @@ function openModal(item) {
     .map(t => `<span class="badge badge--tag">${escHtml(t)}</span>`).join('');
   DOM.skillDescription.textContent = item.description || '';
 
-  // Download .md — use originalFilename if available so user gets the real name
-  DOM.downloadBtn.onclick = () => downloadSkillFile(item);
-
-  // Download zip — only show if zipFilename exists
+  // Show only zip button if zip exists, only md button if no zip
   if (item.zipFilename) {
+    DOM.downloadBtn.classList.add('hidden');
     DOM.downloadZipBtn.classList.remove('hidden');
     DOM.downloadZipBtn.onclick = () => downloadZipFile(item);
   } else {
+    DOM.downloadBtn.classList.remove('hidden');
+    DOM.downloadBtn.onclick = () => downloadSkillFile(item);
     DOM.downloadZipBtn.classList.add('hidden');
   }
 
@@ -350,9 +362,7 @@ async function downloadSkillFile(item) {
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
     a.href     = url;
-    // Derive a clean .md filename — strip any original extension and use .md
-    const baseName = (item.originalFilename || item.filename).replace(/\.[^.]+$/, '');
-    a.download = baseName + '.md';
+    a.download = item.filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -373,8 +383,7 @@ async function downloadZipFile(item) {
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
     a.href     = url;
-    // Use originalFilename (the zip name) if available, otherwise fall back
-    a.download = item.originalFilename || item.zipFilename;
+    a.download = item.zipFilename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
